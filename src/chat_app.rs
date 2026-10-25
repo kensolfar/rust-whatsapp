@@ -1,0 +1,57 @@
+use crate::models::conversation::Conversation;
+use crate::models::message::Message;
+
+pub struct ChatApp {
+    pub conversations: Vec<Conversation>,
+}
+
+impl ChatApp {
+    pub fn new() -> Self {
+        Self {
+            conversations: Vec::new(),
+        }
+    }
+
+    pub fn add_conversation(&mut self, phone_number: String, name: String) {
+        let id = self
+            .conversations
+            .iter()
+            .map(|conversation| conversation.id)
+            .max()
+            .map_or(0, |last_id| last_id + 1);
+
+        self.conversations
+            .push(Conversation::new(id, phone_number, name));
+    }
+
+    pub fn add_message(&mut self, message: Message) {
+        let conversation_index = self
+            .conversations
+            .iter()
+            .position(|conversation| conversation.phone_number == message.phone_number);
+
+        let conversation_index = match conversation_index {
+            Some(index) => index,
+            None => {
+                self.add_conversation(message.phone_number.clone(), message.sender.clone());
+                self.conversations.len() - 1
+            }
+        };
+
+        self.conversations[conversation_index].add_message(message);
+    }
+
+    pub fn total_messages(&self) -> usize {
+        self.conversations
+            .iter()
+            .map(|c| c.message_count())
+            .sum()
+    }
+
+    pub fn total_unread_messages(&self) -> usize {
+        self.conversations
+            .iter()
+            .map(|c| c.unread_count())
+            .sum()
+    }
+}

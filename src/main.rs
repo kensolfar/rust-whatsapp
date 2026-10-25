@@ -1,47 +1,10 @@
-#[derive(PartialEq)]
-enum MessageStatus {
-    Sending,
-    Sent,
-    Delivered,
-    Read,
-    Failed,
-}
-struct Message {
-    sender: String,
-    content: String,
-    status: MessageStatus,
-    attachment: Option<String>,
-}
+mod models;
+mod chat_app;
 
-struct Conversation {
-    id: u64,
-    name: String,
-    messages: Vec<Message>,
-}
+use models::message::{Message, MessageStatus};
+use models::conversation::Conversation;
+use chat_app::ChatApp;
 
-impl Conversation {
-    fn new(id:u64, name: String) -> Self {
-        Self {
-            id,
-            name,
-            messages: Vec::new(),
-        }
-    }
-
-    fn add_message(&mut self, message: Message) {
-        self.messages.push(message);
-    }
-}
-
-impl Message {
-    fn update_status(&mut self, new_status: MessageStatus) {
-        self.status = new_status;
-    }
-
-    fn has_attachment(&self) -> bool {
-        self.attachment.is_some()
-    }
-}
 
 fn print_status(status: &MessageStatus) {
     match status {
@@ -68,64 +31,87 @@ fn print_message(message: &Message) {
     println!("-------------------------");
 }
 
-fn print_stats(messages: &[Message]) {
-    let mut leidos = 0;
-    let mut no_leidos = 0;
-    let mut con_adjunto = 0;
+fn print_conversation_stats(conversation: &Conversation) {
 
-    for message in messages {
-        if message.status == MessageStatus::Read {
-            leidos += 1;
-        } else {
-            no_leidos += 1;
-        }
-        if message.has_attachment() {
-            con_adjunto += 1;
-        }
-    }
-
-    println!("Total de mensajes: {}", messages.len());
-    println!("Mensajes leidos: {}", leidos);
-    println!("Mensajes no leidos: {}", no_leidos);
-    println!("Mensajes con adjunto: {}", con_adjunto);
+    println!("{}", conversation.name);
+    println!("Teléfono: {}", conversation.phone_number);
     println!("-------------------------");
+    println!("Total de mensajes: {}", conversation.message_count());
+    println!("Mensajes no leidos: {}", conversation.unread_count());
+    println!();
+}
+
+fn print_chats (chat: &ChatApp) {
+    println!();
+    println!("=== {} Conversaciones ===", chat.conversations.len());
+    println!();
+    println!("No leidos: {}", chat.total_unread_messages());
+    println!();
+
+    for conversation in &chat.conversations {
+        print_conversation_stats(conversation);
+    }
 }
 fn main() {
-    let message0 = Message {
+
+    let mut chat_app = ChatApp::new();
+
+    chat_app.add_message(Message {
+        phone_number: String::from("+50688888888"),
         sender: String::from("Juan"),
-        content:String::from("Hola, Como estas?"),
+        content: String::from("Hola, Como estas?"),
         status: MessageStatus::Read,
         attachment: None,
-    };
+    });
 
-    let message1 = Message {
-        sender: String::from("Maria"),
-        content:String::from("Bien, gracias!"),
-        status: MessageStatus::Delivered,
-        attachment: None,
-    };
-
-    let mut messages = vec![message0, message1];
-
-    messages.push(Message {
-        sender: String::from("Pedro"),
-        content: String::from("Hola a todos!"),
+    chat_app.add_message(Message {
+        phone_number: String::from("+50688888888"),
+        sender: String::from("Juan"),
+        content: String::from("Muy bien, gracias!"),
         status: MessageStatus::Sent,
         attachment: Some(String::from("imagen.jpg")),
     });
 
-    for message in &messages {
-        print_message(message);
-    }
+    chat_app.add_message(Message {
+        phone_number: String::from("+50688888888"),
+        sender: String::from("Juan"),
+        content: String::from("Me alegra mucho!"),
+        status: MessageStatus::Sent,
+        attachment: None,
+    });
 
-    /*for message in &mut messages {
-        message.update_status(MessageStatus::Read);
-    }*/
+    chat_app.add_message(Message {
+        phone_number: String::from("+50688888888"),
+        sender: String::from("Juan"),
+        content: String::from("Cuando nos vemos?"),
+        status: MessageStatus::Failed,
+        attachment: None,
+    });
 
-    print_stats(&messages);
+    chat_app.add_message(Message {
+        phone_number: String::from("+50689999999"),
+        sender: String::from("Maria"),
+        content:String::from("En donde estas?"),
+        status: MessageStatus::Delivered,
+        attachment: None,
+    });
 
-    messages[0].update_status(MessageStatus::Failed);
+    chat_app.add_message(Message {
+        phone_number: String::from("+50689999999"),
+        sender: String::from("Maria"),
+        content:String::from("Estoy en la playa"),
+        status: MessageStatus::Sent,
+        attachment: None,
+    });
 
-    print_stats(&messages);
+    chat_app.add_message(Message {
+        phone_number: String::from("+50689999999"),
+        sender: String::from("Maria"),
+        content:String::from("Vengan a acompañarme!"),
+        status: MessageStatus::Sending,
+        attachment: None,
+    });
 
-}   
+    print_chats(&chat_app);
+
+}
