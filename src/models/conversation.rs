@@ -31,3 +31,62 @@ impl Conversation {
             .count()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new_conversation_should_have_no_messages() {
+        let conversation = Conversation::new(
+            1, 
+            String::from("+50683032235"), 
+            String::from("Juan")
+        );
+        assert_eq!(conversation.message_count(), 0);
+    }
+
+    #[test]
+    fn add_message_should_increase_message_count() {
+        let mut conversation = Conversation::new(
+            1, 
+            String::from("+50683032235"), 
+            String::from("Juan")
+        );
+        let message = Message {
+            phone_number: String::from("+50683032235"),
+            sender: String::from("Juan"),
+            content: String::from("Hola, ¿cómo estás?"),
+            status: MessageStatus::Sending,
+            attachment: None,
+        };
+        conversation.add_message(message);
+        assert_eq!(conversation.message_count(), 1);
+    }
+
+    #[test]
+    fn unread_count_should_return_correct_number_of_unread_messages() {
+        let mut conversation = Conversation::new(
+            1, 
+            String::from("+50683032235"), 
+            String::from("Juan")
+        );
+        let message1 = Message {
+            phone_number: String::from("+50683032235"),
+            sender: String::from("Juan"),
+            content: String::from("Hola, ¿cómo estás?"),
+            status: MessageStatus::Sending,
+            attachment: None,
+        };
+        let message2 = Message {
+            phone_number: String::from("+50683032235"),
+            sender: String::from("Juan"),
+            content: String::from("¿Qué tal tu día?"),
+            status: MessageStatus::Read,
+            attachment: None,
+        };
+        conversation.add_message(message1);
+        conversation.add_message(message2);
+        assert_eq!(conversation.unread_count(), 1);
+    }
+}

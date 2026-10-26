@@ -1,6 +1,25 @@
 use crate::models::conversation::Conversation;
 use crate::models::message::{Message, MessageStatus};
 
+#[derive(Debug, PartialEq, Eq)]
+pub enum ChatError {
+    EmptyMessage,
+    ConversationNotFound,
+}
+
+impl std::fmt::Display for ChatError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let message = match self {
+            Self::EmptyMessage => "El mensaje no puede estar vacío.",
+            Self::ConversationNotFound => "La conversación no existe.",
+        };
+
+        formatter.write_str(message)
+    }
+}
+
+impl std::error::Error for ChatError {}
+
 pub struct ChatApp {
     pub conversations: Vec<Conversation>,
 }
@@ -66,14 +85,15 @@ impl ChatApp {
         phone_number: &str,
         content: &str,
         attachment: Option<&str>,
-    ) -> Result<(), String> {
-        if content.trim().is_empty() {
-            return Err(String::from("El mensaje no puede estar vacío."));
+    ) -> Result<(), ChatError> {
+        if content.trim().is_empty() && attachment.is_none_or(|a| a.trim().is_empty())
+        {
+            return Err(ChatError::EmptyMessage);
         }
 
         let conversation = self
             .find_conversation_mut(phone_number)
-            .ok_or(String::from("Conversacion no encontrada"))?;
+            .ok_or(ChatError::ConversationNotFound)?;
 
         conversation.add_message(Message {
             phone_number: String::from(phone_number),
@@ -85,4 +105,59 @@ impl ChatApp {
 
         Ok(())
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new_chat_app_should_have_no_conversations() {
+        let chat_app = ChatApp::new();
+        assert_eq!(chat_app.conversations.len(), 0);
+    }
+
+    #[test]
+    fn add_conversation_should_increase_conversation_count() {
+        let mut chat_app = ChatApp::new();
+        chat_app.add_conversation(String::from("+50683032235"), String::from("Juan"));
+        assert_eq!(chat_app.conversations.len(), 1);
+    }
+
+    #[test]
+    fn find_conversation_should_return_correct_conversation() {
+        let mut chat_app = ChatApp::new();
+        chat_app.add_conversation(String::from("+50683032235"), String::from("Juan"));
+        let conversation = chat_app.find_conversation("+50683032235");
+        assert!(conversation.is_some());
+        assert_eq!(conversation.unwrap().name, "Juan");
+    }
+
+    #[test]
+    fn find_conversation_should_return_null_if_not_found() {
+        let chat_app = ChatApp::new();
+        let conversation = chat_app.find_conversation("+50683032235");
+        assert!(conversation.is_none());
+    }
+
+    #[test]
+    fn find_conversation_mut_should_return_correct_conversation() {
+        let mut chat_app = ChatApp::new();
+        chat_app.add_conversation(String::from("+50683032235"), String::from("Juan"));
+        let conversation = chat_app.find_conversation_mut("+50683032235");
+        assert!(conversation.is_some());
+        assert_eq!(conversation.unwrap().name, "Juan");
+    }
+
+    #[test]
+    fn find_conversation_mut_should_allow_modification() {
+        let mut chat_app = ChatApp::new();
+        chat_app.add_conversation(String::from("+50683032235"), String::from("Juan"));
+        let conversation = chat_app.find_conversation_mut("+50683032235");
+        assert!(conversation.is_some());
+        conversation.unwrap().name = String::from("Pedro");
+        let updated_conversation = chat_app.find_conversation("+50683032235");
+        assert_eq!(updated_conversation.unwrap().name, "Pedro");
+    }
+
 }
