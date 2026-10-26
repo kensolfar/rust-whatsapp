@@ -6,6 +6,7 @@ pub enum MessageStatus {
     Read,
     Failed,
 }
+#[derive(PartialEq)]
 pub struct Message {
     pub phone_number: String,
     pub sender: String,

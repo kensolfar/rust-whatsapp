@@ -1,5 +1,5 @@
 use crate::models::conversation::Conversation;
-use crate::models::message::Message;
+use crate::models::message::{Message, MessageStatus};
 
 pub struct ChatApp {
     pub conversations: Vec<Conversation>,
@@ -42,16 +42,47 @@ impl ChatApp {
     }
 
     pub fn total_messages(&self) -> usize {
-        self.conversations
-            .iter()
-            .map(|c| c.message_count())
-            .sum()
+        self.conversations.iter().map(|c| c.message_count()).sum()
     }
 
     pub fn total_unread_messages(&self) -> usize {
+        self.conversations.iter().map(|c| c.unread_count()).sum()
+    }
+
+    pub fn find_conversation(&self, phone_number: &str) -> Option<&Conversation> {
         self.conversations
             .iter()
-            .map(|c| c.unread_count())
-            .sum()
+            .find(|c| c.phone_number == phone_number)
+    }
+
+    pub fn find_conversation_mut(&mut self, phone_number: &str) -> Option<&mut Conversation> {
+        self.conversations
+            .iter_mut()
+            .find(|c| c.phone_number == phone_number)
+    }
+
+    pub fn send_message(
+        &mut self,
+        phone_number: &str,
+        content: &str,
+        attachment: Option<&str>,
+    ) -> Result<(), String> {
+        if content.trim().is_empty() {
+            return Err(String::from("El mensaje no puede estar vacío."));
+        }
+
+        let conversation = self
+            .find_conversation_mut(phone_number)
+            .ok_or(String::from("Conversacion no encontrada"))?;
+
+        conversation.add_message(Message {
+            phone_number: String::from(phone_number),
+            sender: String::from("Yo"),
+            content: String::from(content),
+            status: MessageStatus::Sending,
+            attachment: attachment.map(String::from),
+        });
+
+        Ok(())
     }
 }

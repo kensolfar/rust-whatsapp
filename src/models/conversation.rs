@@ -25,6 +25,9 @@ impl Conversation {
     }
 
     pub fn unread_count(&self) -> usize {
-        self.messages.iter().filter(|m| m.status != MessageStatus::Read).count()
+        self.messages
+            .iter()
+            .filter(|m| m.status != MessageStatus::Read)
+            .count()
     }
 }

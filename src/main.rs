@@ -1,10 +1,9 @@
-mod models;
 mod chat_app;
+mod models;
 
-use models::message::{Message, MessageStatus};
-use models::conversation::Conversation;
 use chat_app::ChatApp;
-
+use models::conversation::Conversation;
+use models::message::{Message, MessageStatus};
 
 fn print_status(status: &MessageStatus) {
     match status {
@@ -32,7 +31,6 @@ fn print_message(message: &Message) {
 }
 
 fn print_conversation_stats(conversation: &Conversation) {
-
     println!("{}", conversation.name);
     println!("Teléfono: {}", conversation.phone_number);
     println!("-------------------------");
@@ -41,7 +39,7 @@ fn print_conversation_stats(conversation: &Conversation) {
     println!();
 }
 
-fn print_chats (chat: &ChatApp) {
+fn print_chats(chat: &ChatApp) {
     println!();
     println!("=== {} Conversaciones ===", chat.conversations.len());
     println!();
@@ -53,7 +51,6 @@ fn print_chats (chat: &ChatApp) {
     }
 }
 fn main() {
-
     let mut chat_app = ChatApp::new();
 
     chat_app.add_message(Message {
@@ -91,7 +88,7 @@ fn main() {
     chat_app.add_message(Message {
         phone_number: String::from("+50689999999"),
         sender: String::from("Maria"),
-        content:String::from("En donde estas?"),
+        content: String::from("En donde estas?"),
         status: MessageStatus::Delivered,
         attachment: None,
     });
@@ -99,7 +96,7 @@ fn main() {
     chat_app.add_message(Message {
         phone_number: String::from("+50689999999"),
         sender: String::from("Maria"),
-        content:String::from("Estoy en la playa"),
+        content: String::from("Estoy en la playa"),
         status: MessageStatus::Sent,
         attachment: None,
     });
@@ -107,11 +104,21 @@ fn main() {
     chat_app.add_message(Message {
         phone_number: String::from("+50689999999"),
         sender: String::from("Maria"),
-        content:String::from("Vengan a acompañarme!"),
+        content: String::from("Vengan a acompañarme!"),
         status: MessageStatus::Sending,
         attachment: None,
     });
 
     print_chats(&chat_app);
 
+    match chat_app.send_message(
+        "+50688888888", 
+        "Saludos, que tal!?", 
+        None
+    ) {
+        Ok(()) => println!("Mensaje Enviado"),
+        Err(error) => println!("Errror: {}", error),
+    }
+
+    print_chats(&chat_app);
 }
