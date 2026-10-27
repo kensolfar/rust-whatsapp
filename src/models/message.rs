@@ -78,13 +78,13 @@ mod tests {
     fn new_message_no_attachment_should_not_have_attachment() {
         let message = message(None);
 
-        assert_eq!(message.has_attachment(), false);
+        assert!(!message.has_attachment());
     }
 
     #[test]
     fn new_message_with_attachment_should_have_attachment() {
         let message = message(Some("image.png"));
-        assert_eq!(message.has_attachment(), true);
+        assert!(message.has_attachment());
     }
 
     #[test]
