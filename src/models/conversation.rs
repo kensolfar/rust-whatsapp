@@ -1,4 +1,5 @@
-use super::message::{Message, MessageStatus};
+use super::message::{Message, MessageStatus, MessageDirection};
+
 pub struct Conversation {
     id: u64,
     phone_number: String,
@@ -71,7 +72,9 @@ mod tests {
             String::from("Juan"),
             String::from("Hola, ¿cómo estás?"),
             MessageStatus::Sending,
+            MessageDirection::Outgoing, 
             None,
+            false,
         );
         conversation.add_message(message);
         assert_eq!(conversation.message_count(), 1);
@@ -87,7 +90,9 @@ mod tests {
             String::from("Juan"),
             String::from("Hola, ¿cómo estás?"),
             MessageStatus::Sending,
+            MessageDirection::Outgoing,
             None,
+            false,
         );
 
         let message2 = Message::new(
@@ -95,7 +100,9 @@ mod tests {
             String::from("Juan"),
             String::from("¿Qué tal tu día?"),
             MessageStatus::Read,
+            MessageDirection::Incoming,
             None,
+            true,
         );
         conversation.add_message(message1);
         conversation.add_message(message2);

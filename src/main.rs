@@ -1,6 +1,6 @@
 use rust_whatsapp::chat_app::ChatApp;
 use rust_whatsapp::display::print_chats;
-use rust_whatsapp::models::message::{Message, MessageStatus};
+use rust_whatsapp::models::message::{Message, MessageStatus, MessageDirection};
 fn main() {
     let mut chat_app = ChatApp::new();
 
@@ -9,7 +9,9 @@ fn main() {
         String::from("Juan"),
         String::from("Hola, Como estas?"),
         MessageStatus::Read,
+        MessageDirection::Incoming,
         None,
+        false,
     ));
 
     chat_app.add_message(Message::new(
@@ -17,7 +19,9 @@ fn main() {
         String::from("Juan"),
         String::from("Muy bien, gracias!"),
         MessageStatus::Sent,
+        MessageDirection::Outgoing,
         Some(String::from("imagen.jpg")),
+        false,
     ));
 
     chat_app.add_message(Message::new(
@@ -25,7 +29,9 @@ fn main() {
         String::from("Juan"),
         String::from("Me alegra mucho!"),
         MessageStatus::Sent,
+        MessageDirection::Outgoing,
         None,
+        false,
     ));
 
     chat_app.add_message(Message::new(
@@ -33,7 +39,9 @@ fn main() {
         String::from("Juan"),
         String::from("Cuando nos vemos?"),
         MessageStatus::Failed,
+        MessageDirection::Outgoing,
         None,
+        false,
     ));
 
     chat_app.add_message(Message::new(
@@ -41,7 +49,9 @@ fn main() {
         String::from("Maria"),
         String::from("En donde estas?"),
         MessageStatus::Delivered,
+        MessageDirection::Incoming,
         None,
+        true,
     ));
 
     chat_app.add_message(Message::new(
@@ -49,7 +59,9 @@ fn main() {
         String::from("Maria"),
         String::from("Estoy en la playa"),
         MessageStatus::Sent,
+        MessageDirection::Outgoing,
         None,
+        false,
     ));
 
     chat_app.add_message(Message::new(
@@ -57,7 +69,9 @@ fn main() {
         String::from("Maria"),
         String::from("Vengan a acompañarme!"),
         MessageStatus::Sending,
+        MessageDirection::Outgoing,
         None,
+        false,
     ));
 
     print_chats(&chat_app);

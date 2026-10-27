@@ -1,5 +1,5 @@
 use crate::models::conversation::Conversation;
-use crate::models::message::{Message, MessageStatus};
+use crate::models::message::{Message, MessageStatus, MessageDirection};
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ChatError {
@@ -121,7 +121,9 @@ impl ChatApp {
             String::from("Yo"),
             String::from(content),
             MessageStatus::Sending,
+            MessageDirection::Outgoing, 
             attachment.map(String::from),
+            false,
         ));
 
         Ok(())

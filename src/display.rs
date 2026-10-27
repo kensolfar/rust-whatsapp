@@ -1,6 +1,6 @@
 use crate::chat_app::ChatApp;
 use crate::models::conversation::Conversation;
-use crate::models::message::{Message, MessageStatus};
+use crate::models::message::{Message, MessageStatus, MessageDirection};
 
 pub fn print_chats(chat: &ChatApp) {
     print!("{}", render_chats(chat));
@@ -67,7 +67,9 @@ mod tests {
             String::from("Juan"),
             String::from("Hola"),
             status,
+            MessageDirection::Outgoing,
             attachment.map(String::from),
+            false,
         )
     }
 

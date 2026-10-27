@@ -6,13 +6,22 @@ pub enum MessageStatus {
     Read,
     Failed,
 }
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum MessageDirection {
+    Incoming,
+    Outgoing,
+}
+
 #[derive(PartialEq)]
 pub struct Message {
     phone_number: String,
     sender: String,
     content: String,
     status: MessageStatus,
+    direction: MessageDirection,
     attachment: Option<String>,
+    is_read: bool,
 }
 
 impl Message {
@@ -21,14 +30,18 @@ impl Message {
         sender: String,
         content: String,
         status: MessageStatus,
+        direction: MessageDirection,
         attachment: Option<String>,
+        is_read: bool,
     ) -> Self {
         Self {
             phone_number,
             sender,
             content,
             status,
+            direction,
             attachment,
+            is_read,
         }
     }
     pub fn sender(&self) -> &str {
@@ -47,6 +60,10 @@ impl Message {
         &self.status
     }
 
+    pub fn direction(&self) -> &MessageDirection {
+        &self.direction
+    }
+
     pub fn attachment(&self) -> Option<&str> {
         self.attachment.as_deref()
     }
@@ -58,6 +75,15 @@ impl Message {
     pub fn has_attachment(&self) -> bool {
         self.attachment.is_some()
     }
+
+    pub fn is_read(&self) -> bool {
+        self.is_read
+    }
+
+    pub fn mark_as_read(&mut self) {
+        self.is_read = true;
+    }
+
 }
 
 #[cfg(test)]
@@ -70,7 +96,9 @@ mod tests {
             String::from("Juan"),
             String::from("Hola, ¿cómo estás?"),
             MessageStatus::Sending,
+            MessageDirection::Incoming,
             attachment.map(String::from),
+            false,
         )
     }
 
