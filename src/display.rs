@@ -16,7 +16,7 @@ fn render_status(status: &MessageStatus) -> &'static str {
     }
 }
 
-fn render_attachment(attachment: &Option<String>) -> String {
+fn render_attachment(attachment: Option<&str>) -> String {
     match attachment {
         Some(file) => format!("Archivo adjunto: {file}"),
         None => String::from("No hay archivo adjunto"),
@@ -26,18 +26,18 @@ fn render_attachment(attachment: &Option<String>) -> String {
 pub fn render_message(message: &Message) -> String {
     format!(
         "De: {}\nMensaje: {}\n{}\n{}\n-------------------------\n",
-        message.sender,
-        message.content,
-        render_status(&message.status),
-        render_attachment(&message.attachment),
+        message.sender(),
+        message.content(),
+        render_status(message.status()),
+        render_attachment(message.attachment().as_deref()),
     )
 }
 
 pub fn render_conversation_stats(conversation: &Conversation) -> String {
     format!(
         "{}\nTeléfono: {}\n-------------------------\nTotal de mensajes: {}\nMensajes no leidos: {}\n\n",
-        conversation.name,
-        conversation.phone_number,
+        conversation.name(),
+        conversation.phone_number(),
         conversation.message_count(),
         conversation.unread_count(),
     )
@@ -62,20 +62,23 @@ mod tests {
     use super::*;
 
     fn message(status: MessageStatus, attachment: Option<&str>) -> Message {
-        Message {
-            phone_number: String::from("+50688888888"),
-            sender: String::from("Juan"),
-            content: String::from("Hola"),
+        Message::new(
+            String::from("+50683032235"),
+            String::from("Juan"),
+            String::from("Hola"),
             status,
-            attachment: attachment.map(String::from),
-        }
+            attachment.map(String::from),
+        )
     }
 
     #[test]
     fn render_status_should_return_the_expected_label() {
         assert_eq!(render_status(&MessageStatus::Sending), "Estado: Enviando");
         assert_eq!(render_status(&MessageStatus::Sent), "Estado: Enviado");
-        assert_eq!(render_status(&MessageStatus::Delivered), "Estado: Entregado");
+        assert_eq!(
+            render_status(&MessageStatus::Delivered),
+            "Estado: Entregado"
+        );
         assert_eq!(render_status(&MessageStatus::Read), "Estado: Leído");
         assert_eq!(render_status(&MessageStatus::Failed), "Estado: Fallido");
     }
@@ -83,17 +86,14 @@ mod tests {
     #[test]
     fn render_attachment_should_handle_an_attachment() {
         assert_eq!(
-            render_attachment(&Some(String::from("imagen.jpg"))),
+            render_attachment(Some("imagen.jpg")),
             "Archivo adjunto: imagen.jpg"
         );
     }
 
     #[test]
     fn render_attachment_should_handle_missing_attachment() {
-        assert_eq!(
-            render_attachment(&None),
-            "No hay archivo adjunto"
-        );
+        assert_eq!(render_attachment(None), "No hay archivo adjunto");
     }
 
     #[test]

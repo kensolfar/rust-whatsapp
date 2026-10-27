@@ -31,6 +31,14 @@ impl ChatApp {
         }
     }
 
+    pub fn conversations(&self) -> &[Conversation] {
+        &self.conversations
+    }
+
+    pub fn conversation_count(&self) -> usize {
+        self.conversations.len()
+    }
+
     pub fn add_conversation(&mut self, phone_number: String, name: String) {
         let id = self
             .conversations
@@ -47,12 +55,12 @@ impl ChatApp {
         let conversation_index = self
             .conversations
             .iter()
-            .position(|conversation| conversation.phone_number == message.phone_number);
+            .position(|conversation| conversation.phone_number == message.phone_number());
 
         let conversation_index = match conversation_index {
             Some(index) => index,
             None => {
-                self.add_conversation(message.phone_number.clone(), message.sender.clone());
+                self.add_conversation(message.phone_number().into(), message.sender().into());
                 self.conversations.len() - 1
             }
         };
@@ -86,8 +94,7 @@ impl ChatApp {
         content: &str,
         attachment: Option<&str>,
     ) -> Result<(), ChatError> {
-        if content.trim().is_empty() && attachment.is_none_or(|a| a.trim().is_empty())
-        {
+        if content.trim().is_empty() && attachment.is_none_or(|a| a.trim().is_empty()) {
             return Err(ChatError::EmptyMessage);
         }
 
@@ -95,13 +102,13 @@ impl ChatApp {
             .find_conversation_mut(phone_number)
             .ok_or(ChatError::ConversationNotFound)?;
 
-        conversation.add_message(Message {
-            phone_number: String::from(phone_number),
-            sender: String::from("Yo"),
-            content: String::from(content),
-            status: MessageStatus::Sending,
-            attachment: attachment.map(String::from),
-        });
+        conversation.add_message(Message::new(
+            String::from(phone_number),
+            String::from("Yo"),
+            String::from(content),
+            MessageStatus::Sending,
+            attachment.map(String::from),
+        ));
 
         Ok(())
     }
@@ -159,5 +166,4 @@ mod tests {
         let updated_conversation = chat_app.find_conversation("+50683032235");
         assert_eq!(updated_conversation.unwrap().name, "Pedro");
     }
-
 }
