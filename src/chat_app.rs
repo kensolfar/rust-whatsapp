@@ -5,6 +5,7 @@ use crate::models::message::{Message, MessageStatus};
 pub enum ChatError {
     EmptyMessage,
     ConversationNotFound,
+    ConversationAlreadyExists,
 }
 
 impl std::fmt::Display for ChatError {
@@ -12,6 +13,7 @@ impl std::fmt::Display for ChatError {
         let message = match self {
             Self::EmptyMessage => "El mensaje no puede estar vacío.",
             Self::ConversationNotFound => "La conversación no existe.",
+            Self::ConversationAlreadyExists => "La conversación ya existe.",
         };
 
         formatter.write_str(message)
@@ -39,7 +41,7 @@ impl ChatApp {
         self.conversations.len()
     }
 
-    pub fn add_conversation(&mut self, phone_number: String, name: String) {
+    fn create_conversation(&mut self, phone_number: String, name: String) {
         let id = self
             .conversations
             .iter()
@@ -51,6 +53,18 @@ impl ChatApp {
             .push(Conversation::new(id, phone_number, name));
     }
 
+    pub fn add_conversation(&mut self, phone_number: String, name: String) -> Result<(), ChatError> {
+        let conversation_exists = self
+            .conversations
+            .iter()
+            .any(|conversation| conversation.phone_number() == phone_number);
+        if conversation_exists {
+            return Err(ChatError::ConversationAlreadyExists);
+        }
+        self.create_conversation(phone_number, name);
+        Ok(())
+    }
+
     pub fn add_message(&mut self, message: Message) {
         let conversation_index = self
             .conversations
@@ -60,7 +74,7 @@ impl ChatApp {
         let conversation_index = match conversation_index {
             Some(index) => index,
             None => {
-                self.add_conversation(message.phone_number().into(), message.sender().into());
+                let _ = self.add_conversation(message.phone_number().into(), message.sender().into());
                 self.conversations.len() - 1
             }
         };
@@ -133,14 +147,34 @@ mod tests {
     #[test]
     fn add_conversation_should_increase_conversation_count() {
         let mut chat_app = ChatApp::new();
-        chat_app.add_conversation(String::from("+50683032235"), String::from("Juan"));
+        chat_app
+            .add_conversation(String::from("+50683032235"), String::from("Juan"))
+            .unwrap();
         assert_eq!(chat_app.conversations.len(), 1);
+    }
+
+    #[test]
+    fn add_conversation_should_fail_for_an_existing_phone_number() {
+        let mut chat_app = ChatApp::new();
+        chat_app
+            .add_conversation(String::from("+50683032235"), String::from("Juan"))
+            .unwrap();
+
+        let result = chat_app.add_conversation(
+            String::from("+50683032235"),
+            String::from("Pedro"),
+        );
+
+        assert_eq!(result, Err(ChatError::ConversationAlreadyExists));
+        assert_eq!(chat_app.conversation_count(), 1);
     }
 
     #[test]
     fn find_conversation_should_return_correct_conversation() {
         let mut chat_app = ChatApp::new();
-        chat_app.add_conversation(String::from("+50683032235"), String::from("Juan"));
+        chat_app
+            .add_conversation(String::from("+50683032235"), String::from("Juan"))
+            .unwrap();
         let conversation = chat_app.find_conversation("+50683032235");
         assert!(conversation.is_some());
         assert_eq!(conversation.unwrap().name(), "Juan");
@@ -156,7 +190,9 @@ mod tests {
     #[test]
     fn find_conversation_mut_should_return_correct_conversation() {
         let mut chat_app = ChatApp::new();
-        chat_app.add_conversation(String::from("+50683032235"), String::from("Juan"));
+        chat_app
+            .add_conversation(String::from("+50683032235"), String::from("Juan"))
+            .unwrap();
         let conversation = chat_app.find_conversation_mut("+50683032235");
         assert!(conversation.is_some());
         assert_eq!(conversation.unwrap().name(), "Juan");
@@ -165,7 +201,9 @@ mod tests {
     #[test]
     fn find_conversation_mut_should_allow_modification() {
         let mut chat_app = ChatApp::new();
-        chat_app.add_conversation(String::from("+50683032235"), String::from("Juan"));
+        chat_app
+            .add_conversation(String::from("+50683032235"), String::from("Juan"))
+            .unwrap();
         let conversation = chat_app.find_conversation_mut("+50683032235");
         assert!(conversation.is_some());
         conversation.unwrap().set_name(String::from("Pedro"));
