@@ -114,6 +114,12 @@ impl ChatApp {
     }
 }
 
+impl Default for ChatApp {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -34,7 +34,7 @@ fn sending_empty_message_with_valid_attachment_should_succeed() {
     assert!(result.is_ok());
     let conversation = chat_app.find_conversation("+50683032235").unwrap();
     assert_eq!(
-        conversation.messages()[0].attachment().as_deref(),
+        conversation.messages()[0].attachment(),
         Some("imagen.jpg")
     );
 }
@@ -54,7 +54,7 @@ fn sent_attachment_should_be_preserved_after_sending_another_message() {
 
     let conversation = chat_app.find_conversation("+50683032235").unwrap();
     assert_eq!(
-        conversation.messages()[0].attachment().as_deref(),
+        conversation.messages()[0].attachment(),
         Some("imagen.jpg")
     );
 }

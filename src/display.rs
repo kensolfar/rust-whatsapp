@@ -29,7 +29,7 @@ pub fn render_message(message: &Message) -> String {
         message.sender(),
         message.content(),
         render_status(message.status()),
-        render_attachment(message.attachment().as_deref()),
+        render_attachment(message.attachment()),
     )
 }
 
