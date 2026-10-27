@@ -46,11 +46,11 @@ pub fn render_conversation_stats(conversation: &Conversation) -> String {
 pub fn render_chats(chat: &ChatApp) -> String {
     let mut output = format!(
         "\n=== {} Conversaciones ===\n\nNo leidos: {}\n\n",
-        chat.conversations.len(),
+        chat.conversation_count(),
         chat.total_unread_messages(),
     );
 
-    for conversation in &chat.conversations {
+    for conversation in chat.conversations() {
         output.push_str(&render_conversation_stats(conversation));
     }
 

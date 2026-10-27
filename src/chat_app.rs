@@ -21,7 +21,7 @@ impl std::fmt::Display for ChatError {
 impl std::error::Error for ChatError {}
 
 pub struct ChatApp {
-    pub conversations: Vec<Conversation>,
+    conversations: Vec<Conversation>,
 }
 
 impl ChatApp {
