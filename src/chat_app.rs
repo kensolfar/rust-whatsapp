@@ -43,7 +43,7 @@ impl ChatApp {
         let id = self
             .conversations
             .iter()
-            .map(|conversation| conversation.id)
+            .map(|conversation| conversation.id())
             .max()
             .map_or(0, |last_id| last_id + 1);
 
@@ -55,7 +55,7 @@ impl ChatApp {
         let conversation_index = self
             .conversations
             .iter()
-            .position(|conversation| conversation.phone_number == message.phone_number());
+            .position(|conversation| conversation.phone_number() == message.phone_number());
 
         let conversation_index = match conversation_index {
             Some(index) => index,
@@ -79,13 +79,13 @@ impl ChatApp {
     pub fn find_conversation(&self, phone_number: &str) -> Option<&Conversation> {
         self.conversations
             .iter()
-            .find(|c| c.phone_number == phone_number)
+            .find(|c| c.phone_number() == phone_number)
     }
 
     pub fn find_conversation_mut(&mut self, phone_number: &str) -> Option<&mut Conversation> {
         self.conversations
             .iter_mut()
-            .find(|c| c.phone_number == phone_number)
+            .find(|c| c.phone_number() == phone_number)
     }
 
     pub fn send_message(
@@ -143,7 +143,7 @@ mod tests {
         chat_app.add_conversation(String::from("+50683032235"), String::from("Juan"));
         let conversation = chat_app.find_conversation("+50683032235");
         assert!(conversation.is_some());
-        assert_eq!(conversation.unwrap().name, "Juan");
+        assert_eq!(conversation.unwrap().name(), "Juan");
     }
 
     #[test]
@@ -159,7 +159,7 @@ mod tests {
         chat_app.add_conversation(String::from("+50683032235"), String::from("Juan"));
         let conversation = chat_app.find_conversation_mut("+50683032235");
         assert!(conversation.is_some());
-        assert_eq!(conversation.unwrap().name, "Juan");
+        assert_eq!(conversation.unwrap().name(), "Juan");
     }
 
     #[test]
@@ -168,8 +168,8 @@ mod tests {
         chat_app.add_conversation(String::from("+50683032235"), String::from("Juan"));
         let conversation = chat_app.find_conversation_mut("+50683032235");
         assert!(conversation.is_some());
-        conversation.unwrap().name = String::from("Pedro");
+        conversation.unwrap().set_name(String::from("Pedro"));
         let updated_conversation = chat_app.find_conversation("+50683032235");
-        assert_eq!(updated_conversation.unwrap().name, "Pedro");
+        assert_eq!(updated_conversation.unwrap().name(), "Pedro");
     }
 }

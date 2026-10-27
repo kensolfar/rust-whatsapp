@@ -1,9 +1,9 @@
 use super::message::{Message, MessageStatus};
 pub struct Conversation {
-    pub id: u64,
-    pub phone_number: String,
-    pub name: String,
-    pub messages: Vec<Message>,
+    id: u64,
+    phone_number: String,
+    name: String,
+    messages: Vec<Message>,
 }
 
 impl Conversation {
@@ -26,6 +26,10 @@ impl Conversation {
 
     pub fn name(&self) -> &str {
         &self.name
+    }
+
+    pub fn set_name(&mut self, new_name: String) {
+        self.name = new_name;
     }
 
     pub fn messages(&self) -> &[Message] {
