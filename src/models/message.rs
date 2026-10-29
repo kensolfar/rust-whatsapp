@@ -69,7 +69,9 @@ impl Message {
     }
 
     pub fn update_status(&mut self, new_status: MessageStatus) {
-        self.status = new_status;
+        if self.direction != MessageDirection::Incoming {
+            self.status = new_status;
+        }
     }
 
     pub fn has_attachment(&self) -> bool {
@@ -124,7 +126,15 @@ mod tests {
 
     #[test]
     fn update_status_should_change_message_status() {
-        let mut message = message(None);
+        let mut message = Message::new(
+            String::from("+50683032235"),
+            String::from("Juan"),
+            String::from("Hola, ¿cómo estás?"),
+            MessageStatus::Sending,
+            MessageDirection::Outgoing,
+            None,
+            false,
+        );
         message.update_status(MessageStatus::Sent);
         assert_eq!(message.status, MessageStatus::Sent);
     }

@@ -37,8 +37,12 @@ impl Conversation {
         &self.messages
     }
 
-    pub fn messages_mut(&mut self) -> &mut Vec<Message> {
-        &mut self.messages
+    pub fn mark_as_read(&mut self) {
+        for message in &mut self.messages {
+            if message.direction() == &MessageDirection::Incoming {
+                message.mark_as_read();
+            }
+        }
     }
 
     pub fn add_message(&mut self, message: Message) {
@@ -113,17 +117,17 @@ mod tests {
     }
 
     #[test]
-    fn messages_mut_should_allow_modifying_the_message_collection() {
+    fn mark_as_read_should_mark_incoming_messages_without_changing_outgoing_messages() {
         let mut conversation = conversation();
 
-        conversation.messages_mut().push(message(
-            MessageDirection::Incoming,
-            false,
-            "Added through mutable accessor",
-        ));
+        conversation.add_message(message(MessageDirection::Incoming, false, "Incoming"));
+        conversation.add_message(message(MessageDirection::Outgoing, false, "Outgoing"));
 
-        assert_eq!(conversation.message_count(), 1);
-        assert_eq!(conversation.messages()[0].content(), "Added through mutable accessor");
+        conversation.mark_as_read();
+
+        assert!(conversation.messages()[0].is_read());
+        assert!(!conversation.messages()[1].is_read());
+        assert_eq!(conversation.unread_count(), 0);
     }
 
     #[test]

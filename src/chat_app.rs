@@ -102,8 +102,8 @@ impl ChatApp {
         };
 
         self.conversations[conversation_index].add_message(Message::new(
-            String::from(MY_PHONE_NUMBER),
-            String::from("Yo"),
+            String::from(phone_number),
+            String::from(sender),
             String::from(content),
             MessageStatus::Sending,
             MessageDirection::Incoming,
@@ -166,11 +166,7 @@ impl ChatApp {
             .find_conversation_mut(phone_number)
             .ok_or(ChatError::ConversationNotFound)?;
 
-        for message in conversation.messages_mut() {
-            if message.direction() == &MessageDirection::Incoming {
-                message.mark_as_read();
-            }
-        }
+        conversation.mark_as_read();
 
         Ok(())
     }
