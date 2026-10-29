@@ -74,7 +74,7 @@ impl Conversation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::message::MessageStatus;
+    use crate::models::message::DeliveryStatus;
 
     fn conversation() -> Conversation {
         Conversation::new(1, String::from("+50683032235"), String::from("Juan"))
@@ -83,7 +83,7 @@ mod tests {
     fn message(direction: MessageDirection, is_read: bool, content: &str) -> Message {
         let status = match direction {
             MessageDirection::Incoming => None,
-            MessageDirection::Outgoing => Some(MessageStatus::Sending),
+            MessageDirection::Outgoing => Some(DeliveryStatus::Sending),
         };
 
         Message::new(

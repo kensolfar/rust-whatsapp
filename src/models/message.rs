@@ -1,5 +1,5 @@
 #[derive(PartialEq, Debug, Clone, Eq, Hash)]
-pub enum MessageStatus {
+pub enum DeliveryStatus {
     Sending,
     Sent,
     Delivered,
@@ -18,7 +18,7 @@ pub struct Message {
     phone_number: String,
     sender: String,
     content: String,
-    status: Option<MessageStatus>,
+    status: Option<DeliveryStatus>,
     direction: MessageDirection,
     attachment: Option<String>,
     is_read: bool,
@@ -33,7 +33,7 @@ impl Message {
         phone_number: String,
         sender: String,
         content: String,
-        status: Option<MessageStatus>,
+        status: Option<DeliveryStatus>,
         direction: MessageDirection,
         attachment: Option<String>,
         is_read: bool,
@@ -69,7 +69,7 @@ impl Message {
     }
 
     /// Devuelve el estado de entrega del mensaje, si tiene uno.
-    pub fn status(&self) -> Option<&MessageStatus> {
+    pub fn status(&self) -> Option<&DeliveryStatus> {
         self.status.as_ref()
     }
 
@@ -87,7 +87,7 @@ impl Message {
     ///
     /// Los mensajes entrantes no modifican su estado y permanecen sin estado
     /// de entrega.
-    pub fn update_status(&mut self, new_status: MessageStatus) {
+    pub fn update_status(&mut self, new_status: DeliveryStatus) {
         if self.direction != MessageDirection::Incoming {
             self.status = Some(new_status);
         }
@@ -152,7 +152,7 @@ mod tests {
             String::from("+50683032235"),
             String::from("Juan"),
             String::from("Hola, ¿cómo estás?"),
-            Some(MessageStatus::Sending),
+            Some(DeliveryStatus::Sending),
             MessageDirection::Incoming,
             None,
             false,
@@ -167,13 +167,13 @@ mod tests {
             String::from("+50683032235"),
             String::from("Juan"),
             String::from("Hola, ¿cómo estás?"),
-            Some(MessageStatus::Sending),
+            Some(DeliveryStatus::Sending),
             MessageDirection::Outgoing,
             None,
             false,
         );
-        message.update_status(MessageStatus::Sent);
-        assert_eq!(message.status, Some(MessageStatus::Sent));
+        message.update_status(DeliveryStatus::Sent);
+        assert_eq!(message.status, Some(DeliveryStatus::Sent));
     }
 
     #[test]
@@ -188,7 +188,7 @@ mod tests {
             false,
         );
 
-        message.update_status(MessageStatus::Read);
+        message.update_status(DeliveryStatus::Read);
 
         assert_eq!(message.status(), None);
     }

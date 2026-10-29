@@ -1,5 +1,5 @@
 use crate::models::conversation::Conversation;
-use crate::models::message::{Message, MessageDirection, MessageStatus};
+use crate::models::message::{Message, MessageDirection, DeliveryStatus};
 
 const MY_PHONE_NUMBER: &str = "+50683032235";
 
@@ -176,7 +176,7 @@ impl ChatApp {
             String::from(MY_PHONE_NUMBER),
             String::from("Yo"),
             String::from(content),
-            Some(MessageStatus::Sending),
+            Some(DeliveryStatus::Sending),
             MessageDirection::Outgoing,
             attachment.map(String::from),
             true,
