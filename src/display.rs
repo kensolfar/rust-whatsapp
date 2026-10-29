@@ -33,7 +33,7 @@ pub fn render_message(message: &Message) -> String {
         "De: {}\nMensaje: {}\n{}\n{}\n-------------------------\n",
         message.sender(),
         message.content(),
-        render_status(message.status()),
+        render_status(message.delivery_status()),
         render_attachment(message.attachment()),
     )
 }
@@ -67,17 +67,14 @@ pub fn render_chats(chat: &ChatApp) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::message::MessageDirection;
 
     fn message(status: Option<DeliveryStatus>, attachment: Option<&str>) -> Message {
-        Message::new(
+        Message::new_outgoing(
             String::from("+50683032235"),
             String::from("Juan"),
             String::from("Hola"),
-            status,
-            MessageDirection::Outgoing,
+            status.expect("display test requires an outgoing status"),
             attachment.map(String::from),
-            false,
         )
     }
 

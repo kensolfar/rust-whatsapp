@@ -1,4 +1,4 @@
-use super::message::{Message, MessageDirection};
+use super::message::{Message, MessageDirection, MessageKind};
 
 pub struct Conversation {
     id: u64,
@@ -66,7 +66,10 @@ impl Conversation {
     pub fn unread_count(&self) -> usize {
         self.messages
             .iter()
-            .filter(|m| !m.is_read() && m.direction() == &MessageDirection::Incoming)
+            .filter(|message| match &message.kind {
+                MessageKind::Incoming { is_read } => !is_read,
+                MessageKind::Outgoing { .. } => false,
+            })
             .count()
     }
 }
@@ -81,20 +84,22 @@ mod tests {
     }
 
     fn message(direction: MessageDirection, is_read: bool, content: &str) -> Message {
-        let status = match direction {
-            MessageDirection::Incoming => None,
-            MessageDirection::Outgoing => Some(DeliveryStatus::Sending),
-        };
-
-        Message::new(
-            String::from("+50683032235"),
-            String::from("Juan"),
-            String::from(content),
-            status,
-            direction,
-            None,
-            is_read,
-        )
+        match direction {
+            MessageDirection::Incoming => Message::new_incoming(
+                String::from("+50683032235"),
+                String::from("Juan"),
+                String::from(content),
+                None,
+                is_read,
+            ),
+            MessageDirection::Outgoing => Message::new_outgoing(
+                String::from("+50683032235"),
+                String::from("Juan"),
+                String::from(content),
+                DeliveryStatus::Sending,
+                None,
+            ),
+        }
     }
 
     #[test]
@@ -137,11 +142,13 @@ mod tests {
 
         conversation.add_message(message(MessageDirection::Incoming, false, "Incoming"));
         conversation.add_message(message(MessageDirection::Outgoing, false, "Outgoing"));
+        let outgoing_status = conversation.messages()[1].delivery_status().cloned();
 
         conversation.mark_as_read();
 
         assert!(conversation.messages()[0].is_read());
-        assert!(!conversation.messages()[1].is_read());
+        assert!(conversation.messages()[1].is_read());
+        assert_eq!(conversation.messages()[1].delivery_status().cloned(), outgoing_status);
         assert_eq!(conversation.unread_count(), 0);
     }
 

@@ -13,46 +13,60 @@ pub enum MessageDirection {
     Outgoing,
 }
 
+#[derive(Debug, PartialEq, Eq)]
+pub enum MessageKind {
+    Incoming {
+        is_read: bool,
+    },
+    Outgoing {
+        delivery_status: DeliveryStatus,
+    },
+}
+
 #[derive(PartialEq)]
 pub struct Message {
     phone_number: String,
     sender: String,
     content: String,
-    status: Option<DeliveryStatus>,
-    direction: MessageDirection,
+    pub(crate) kind: MessageKind,
     attachment: Option<String>,
-    is_read: bool,
 }
 
 impl Message {
-    /// Crea un mensaje.
-    ///
-    /// Los mensajes entrantes siempre se crean sin estado de entrega. El
-    /// estado proporcionado solo se conserva para mensajes salientes.
-    pub fn new(
+    /// Crea un mensaje entrante sin estado de entrega.
+    pub fn new_incoming(
         phone_number: String,
         sender: String,
         content: String,
-        status: Option<DeliveryStatus>,
-        direction: MessageDirection,
         attachment: Option<String>,
         is_read: bool,
     ) -> Self {
-        let status = match direction {
-            MessageDirection::Incoming => None,
-            MessageDirection::Outgoing => status,
-        };
-
         Self {
             phone_number,
             sender,
             content,
-            status,
-            direction,
+            kind: MessageKind::Incoming { is_read },
             attachment,
-            is_read,
         }
     }
+
+    /// Crea un mensaje saliente con su estado de entrega inicial.
+    pub fn new_outgoing(
+        phone_number: String,
+        sender: String,
+        content: String,
+        delivery_status: DeliveryStatus,
+        attachment: Option<String>,
+    ) -> Self {
+        Self {
+            phone_number,
+            sender,
+            content,
+            kind: MessageKind::Outgoing { delivery_status },
+            attachment,
+        }
+    }
+
     /// Devuelve el remitente del mensaje.
     pub fn sender(&self) -> &str {
         &self.sender
@@ -69,13 +83,19 @@ impl Message {
     }
 
     /// Devuelve el estado de entrega del mensaje, si tiene uno.
-    pub fn status(&self) -> Option<&DeliveryStatus> {
-        self.status.as_ref()
+    pub fn delivery_status(&self) -> Option<&DeliveryStatus> {
+        match &self.kind {
+            MessageKind::Incoming { .. } => None,
+            MessageKind::Outgoing { delivery_status } => Some(delivery_status),
+        }
     }
 
     /// Devuelve la dirección del mensaje.
     pub fn direction(&self) -> &MessageDirection {
-        &self.direction
+        match &self.kind {
+            MessageKind::Incoming { .. } => &MessageDirection::Incoming,
+            MessageKind::Outgoing { .. } => &MessageDirection::Outgoing,
+        }
     }
 
     /// Devuelve el nombre del archivo adjunto, si existe.
@@ -87,9 +107,9 @@ impl Message {
     ///
     /// Los mensajes entrantes no modifican su estado y permanecen sin estado
     /// de entrega.
-    pub fn update_status(&mut self, new_status: DeliveryStatus) {
-        if self.direction != MessageDirection::Incoming {
-            self.status = Some(new_status);
+    pub fn update_delivery_status(&mut self, new_status: DeliveryStatus) {
+        if let MessageKind::Outgoing { delivery_status } = &mut self.kind {
+            *delivery_status = new_status;
         }
     }
 
@@ -100,12 +120,17 @@ impl Message {
 
     /// Indica si el mensaje fue marcado como leído.
     pub fn is_read(&self) -> bool {
-        self.is_read
+        match &self.kind {
+            MessageKind::Incoming { is_read } => *is_read,
+            MessageKind::Outgoing { .. } => true,
+        }
     }
 
     /// Marca el mensaje como leído.
     pub fn mark_as_read(&mut self) {
-        self.is_read = true;
+        if let MessageKind::Incoming { is_read } = &mut self.kind {
+            *is_read = true;
+        }
     }
 
 }
@@ -115,12 +140,10 @@ mod tests {
     use super::*;
 
     fn message(attachment: Option<&str>) -> Message {
-        Message::new(
+        Message::new_incoming(
             String::from("+50683032235"),
             String::from("Juan"),
             String::from("Hola, ¿cómo estás?"),
-            None,
-            MessageDirection::Incoming,
             attachment.map(String::from),
             false,
         )
@@ -143,53 +166,47 @@ mod tests {
     fn new_message_should_have_correct_status() {
         let message = message(None);
 
-        assert_eq!(message.status, None);
+        assert_eq!(message.delivery_status(), None);
     }
 
     #[test]
     fn new_incoming_message_should_ignore_provided_status() {
-        let message = Message::new(
+        let message = Message::new_incoming(
             String::from("+50683032235"),
             String::from("Juan"),
             String::from("Hola, ¿cómo estás?"),
-            Some(DeliveryStatus::Sending),
-            MessageDirection::Incoming,
             None,
             false,
         );
 
-        assert_eq!(message.status(), None);
+        assert_eq!(message.delivery_status(), None);
     }
 
     #[test]
     fn update_status_should_change_message_status() {
-        let mut message = Message::new(
+        let mut message = Message::new_outgoing(
             String::from("+50683032235"),
             String::from("Juan"),
             String::from("Hola, ¿cómo estás?"),
-            Some(DeliveryStatus::Sending),
-            MessageDirection::Outgoing,
+            DeliveryStatus::Sending,
             None,
-            false,
         );
-        message.update_status(DeliveryStatus::Sent);
-        assert_eq!(message.status, Some(DeliveryStatus::Sent));
+        message.update_delivery_status(DeliveryStatus::Sent);
+        assert_eq!(message.delivery_status(), Some(&DeliveryStatus::Sent));
     }
 
     #[test]
     fn update_status_should_not_change_an_incoming_message_status() {
-        let mut message = Message::new(
+        let mut message = Message::new_incoming(
             String::from("+50683032235"),
             String::from("Juan"),
             String::from("Hola, ¿cómo estás?"),
             None,
-            MessageDirection::Incoming,
-            None,
             false,
         );
 
-        message.update_status(DeliveryStatus::Read);
+        message.update_delivery_status(DeliveryStatus::Read);
 
-        assert_eq!(message.status(), None);
+        assert_eq!(message.delivery_status(), None);
     }
 }

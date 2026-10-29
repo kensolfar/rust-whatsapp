@@ -1,5 +1,5 @@
 use crate::models::conversation::Conversation;
-use crate::models::message::{Message, MessageDirection, DeliveryStatus};
+use crate::models::message::{DeliveryStatus, Message};
 
 const MY_PHONE_NUMBER: &str = "+50683032235";
 
@@ -116,12 +116,10 @@ impl ChatApp {
             }
         };
 
-        self.conversations[conversation_index].add_message(Message::new(
+        self.conversations[conversation_index].add_message(Message::new_incoming(
             String::from(phone_number),
             String::from(sender),
             String::from(content),
-            None,
-            MessageDirection::Incoming,
             attachment.map(String::from),
             false,
         ));
@@ -155,7 +153,7 @@ impl ChatApp {
 
     /// Agrega un mensaje saliente a una conversación existente.
     ///
-    /// El mensaje se crea con estado [`MessageStatus::Sending`]. Devuelve
+    /// El mensaje se crea con estado [`DeliveryStatus::Sending`]. Devuelve
     /// [`ChatError::EmptyMessage`] si no hay contenido ni archivo adjunto, o
     /// [`ChatError::ConversationNotFound`] si no existe la conversación.
     pub fn send_message(
@@ -172,14 +170,12 @@ impl ChatApp {
             .find_conversation_mut(phone_number)
             .ok_or(ChatError::ConversationNotFound)?;
 
-        conversation.add_message(Message::new(
+        conversation.add_message(Message::new_outgoing(
             String::from(MY_PHONE_NUMBER),
             String::from("Yo"),
             String::from(content),
-            Some(DeliveryStatus::Sending),
-            MessageDirection::Outgoing,
+            DeliveryStatus::Sending,
             attachment.map(String::from),
-            true,
         ));
 
         Ok(())
@@ -207,6 +203,7 @@ impl Default for ChatApp {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::models::message::MessageDirection;
 
     #[test]
     fn new_chat_app_should_have_no_conversations() {
@@ -318,7 +315,7 @@ mod tests {
 
         assert_eq!(chat_app.total_unread_messages(), 1);
         let conversation = chat_app.find_conversation("+50683032235").unwrap();
-        assert_eq!(conversation.messages()[0].status(), None);
+        assert_eq!(conversation.messages()[0].delivery_status(), None);
     }
 
     #[test]
