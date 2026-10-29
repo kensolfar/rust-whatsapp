@@ -71,11 +71,16 @@ mod tests {
     }
 
     fn message(direction: MessageDirection, is_read: bool, content: &str) -> Message {
+        let status = match direction {
+            MessageDirection::Incoming => None,
+            MessageDirection::Outgoing => Some(MessageStatus::Sending),
+        };
+
         Message::new(
             String::from("+50683032235"),
             String::from("Juan"),
             String::from(content),
-            Some(MessageStatus::Sending),
+            status,
             direction,
             None,
             is_read,

@@ -34,6 +34,11 @@ impl Message {
         attachment: Option<String>,
         is_read: bool,
     ) -> Self {
+        let status = match direction {
+            MessageDirection::Incoming => None,
+            MessageDirection::Outgoing => status,
+        };
+
         Self {
             phone_number,
             sender,
@@ -97,7 +102,7 @@ mod tests {
             String::from("+50683032235"),
             String::from("Juan"),
             String::from("Hola, ¿cómo estás?"),
-            Some(MessageStatus::Sending),
+            None,
             MessageDirection::Incoming,
             attachment.map(String::from),
             false,
@@ -121,16 +126,16 @@ mod tests {
     fn new_message_should_have_correct_status() {
         let message = message(None);
 
-        assert_eq!(message.status, Some(MessageStatus::Sending));
+        assert_eq!(message.status, None);
     }
 
     #[test]
-    fn new_incoming_message_should_have_no_status() {
+    fn new_incoming_message_should_ignore_provided_status() {
         let message = Message::new(
             String::from("+50683032235"),
             String::from("Juan"),
             String::from("Hola, ¿cómo estás?"),
-            None,
+            Some(MessageStatus::Sending),
             MessageDirection::Incoming,
             None,
             false,
