@@ -4,3 +4,4 @@ rust-whatsapp-revision.zip
 /.rustup
 /.agents
 /.aws
+.DS_Store
