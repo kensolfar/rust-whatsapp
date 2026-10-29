@@ -1,4 +1,4 @@
-use super::message::{Message, MessageStatus, MessageDirection};
+use super::message::{Message, MessageDirection};
 
 pub struct Conversation {
     id: u64,
@@ -37,6 +37,10 @@ impl Conversation {
         &self.messages
     }
 
+    pub fn messages_mut(&mut self) -> &mut Vec<Message> {
+        &mut self.messages
+    }
+
     pub fn add_message(&mut self, message: Message) {
         self.messages.push(message);
     }
@@ -48,7 +52,7 @@ impl Conversation {
     pub fn unread_count(&self) -> usize {
         self.messages
             .iter()
-            .filter(|m| m.status() != &MessageStatus::Read)
+            .filter(|m| m.is_read() == false && m.direction() == &MessageDirection::Incoming)
             .count()
     }
 }
@@ -56,56 +60,91 @@ impl Conversation {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::models::message::MessageStatus;
+
+    fn conversation() -> Conversation {
+        Conversation::new(1, String::from("+50683032235"), String::from("Juan"))
+    }
+
+    fn message(direction: MessageDirection, is_read: bool, content: &str) -> Message {
+        Message::new(
+            String::from("+50683032235"),
+            String::from("Juan"),
+            String::from(content),
+            MessageStatus::Sending,
+            direction,
+            None,
+            is_read,
+        )
+    }
 
     #[test]
-    fn new_conversation_should_have_no_messages() {
-        let conversation = Conversation::new(1, String::from("+50683032235"), String::from("Juan"));
+    fn new_conversation_should_store_identity_and_have_no_messages() {
+        let conversation = conversation();
+
+        assert_eq!(conversation.id(), 1);
+        assert_eq!(conversation.phone_number(), "+50683032235");
+        assert_eq!(conversation.name(), "Juan");
         assert_eq!(conversation.message_count(), 0);
+        assert!(conversation.messages().is_empty());
     }
 
     #[test]
-    fn add_message_should_increase_message_count() {
-        let mut conversation =
-            Conversation::new(1, String::from("+50683032235"), String::from("Juan"));
-        let message = Message::new(
-            String::from("+50683032235"),
-            String::from("Juan"),
-            String::from("Hola, ¿cómo estás?"),
-            MessageStatus::Sending,
-            MessageDirection::Outgoing, 
-            None,
-            false,
-        );
-        conversation.add_message(message);
-        assert_eq!(conversation.message_count(), 1);
+    fn set_name_should_replace_existing_name() {
+        let mut conversation = conversation();
+
+        conversation.set_name(String::from("Pedro"));
+
+        assert_eq!(conversation.name(), "Pedro");
     }
 
     #[test]
-    fn unread_count_should_return_correct_number_of_unread_messages() {
-        let mut conversation =
-            Conversation::new(1, String::from("+50683032235"), String::from("Juan"));
+    fn add_message_should_preserve_order_and_increase_message_count() {
+        let mut conversation = conversation();
+        let first = message(MessageDirection::Outgoing, false, "First");
+        let second = message(MessageDirection::Incoming, false, "Second");
 
-        let message1 = Message::new(
-            String::from("+50683032235"),
-            String::from("Juan"),
-            String::from("Hola, ¿cómo estás?"),
-            MessageStatus::Sending,
-            MessageDirection::Outgoing,
-            None,
-            false,
-        );
+        conversation.add_message(first);
+        conversation.add_message(second);
 
-        let message2 = Message::new(
-            String::from("+50683032235"),
-            String::from("Juan"),
-            String::from("¿Qué tal tu día?"),
-            MessageStatus::Read,
+        assert_eq!(conversation.message_count(), 2);
+        assert_eq!(conversation.messages()[0].content(), "First");
+        assert_eq!(conversation.messages()[1].content(), "Second");
+    }
+
+    #[test]
+    fn messages_mut_should_allow_modifying_the_message_collection() {
+        let mut conversation = conversation();
+
+        conversation.messages_mut().push(message(
             MessageDirection::Incoming,
-            None,
-            true,
-        );
-        conversation.add_message(message1);
-        conversation.add_message(message2);
+            false,
+            "Added through mutable accessor",
+        ));
+
+        assert_eq!(conversation.message_count(), 1);
+        assert_eq!(conversation.messages()[0].content(), "Added through mutable accessor");
+    }
+
+    #[test]
+    fn unread_count_should_only_include_unread_incoming_messages() {
+        let mut conversation = conversation();
+
+        conversation.add_message(message(MessageDirection::Incoming, false, "Unread incoming"));
+        conversation.add_message(message(MessageDirection::Incoming, true, "Read incoming"));
+        conversation.add_message(message(MessageDirection::Outgoing, false, "Unread outgoing"));
+        conversation.add_message(message(MessageDirection::Outgoing, true, "Read outgoing"));
+
         assert_eq!(conversation.unread_count(), 1);
+    }
+
+    #[test]
+    fn unread_count_should_be_zero_when_there_are_no_unread_incoming_messages() {
+        let mut conversation = conversation();
+
+        conversation.add_message(message(MessageDirection::Incoming, true, "Read incoming"));
+        conversation.add_message(message(MessageDirection::Outgoing, false, "Unread outgoing"));
+
+        assert_eq!(conversation.unread_count(), 0);
     }
 }
