@@ -286,6 +286,18 @@ mod tests {
     }
 
     #[test]
+    fn add_incoming_message_should_increase_unread_count() {
+        let mut chat_app = ChatApp::new();
+        assert_eq!(chat_app.total_unread_messages(), 0);
+
+        chat_app
+            .add_incoming_message("+50683032235", "Juan", "Hola", None)
+            .unwrap();
+
+        assert_eq!(chat_app.total_unread_messages(), 1);
+    }
+
+    #[test]
     fn mark_conversation_as_read_should_mark_all_incoming_messages_as_read() {
         const PHONE_NUMBER: &str = "+50688888888";
         let mut chat_app = ChatApp::new();
@@ -311,5 +323,14 @@ mod tests {
             .unwrap();
         let conversation = chat_app.find_conversation(PHONE_NUMBER).unwrap();
         assert_eq!(conversation.unread_count(), 0);
+    }
+
+    #[test]
+    fn mark_nonexistent_conversation_as_read_should_return_not_found_error() {
+        let mut chat_app = ChatApp::new();
+
+        let result = chat_app.mark_conversation_as_read("+50688888888");
+
+        assert_eq!(result, Err(ChatError::ConversationNotFound));
     }
 }
