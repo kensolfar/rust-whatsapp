@@ -96,7 +96,7 @@ impl ChatApp {
             Some(index) => index,
             None => {
                 let _ =
-                    self.add_conversation(String::from(phone_number).to_owned(), String::from(sender));
+                    self.add_conversation(String::from(phone_number), String::from(sender));
                 self.conversations.len() - 1
             }
         };
