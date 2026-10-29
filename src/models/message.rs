@@ -73,9 +73,9 @@ impl Message {
         self.attachment.as_deref()
     }
 
-    pub fn update_status(&mut self, new_status: Option<MessageStatus>) {
+    pub fn update_status(&mut self, new_status: MessageStatus) {
         if self.direction != MessageDirection::Incoming {
-            self.status = new_status;
+            self.status = Some(new_status);
         }
     }
 
@@ -155,7 +155,7 @@ mod tests {
             None,
             false,
         );
-        message.update_status(Some(MessageStatus::Sent));
+        message.update_status(MessageStatus::Sent);
         assert_eq!(message.status, Some(MessageStatus::Sent));
     }
 
@@ -171,7 +171,7 @@ mod tests {
             false,
         );
 
-        message.update_status(Some(MessageStatus::Read));
+        message.update_status(MessageStatus::Read);
 
         assert_eq!(message.status(), None);
     }
