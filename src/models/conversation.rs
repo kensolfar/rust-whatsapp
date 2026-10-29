@@ -8,6 +8,7 @@ pub struct Conversation {
 }
 
 impl Conversation {
+    /// Crea una conversación sin mensajes.
     pub fn new(id: u64, phone_number: String, name: String) -> Self {
         Self {
             id,
@@ -17,26 +18,32 @@ impl Conversation {
         }
     }
 
+    /// Devuelve el identificador de la conversación.
     pub fn id(&self) -> u64 {
         self.id
     }
 
+    /// Devuelve el número telefónico asociado a la conversación.
     pub fn phone_number(&self) -> &str {
         &self.phone_number
     }
 
+    /// Devuelve el nombre mostrado para la conversación.
     pub fn name(&self) -> &str {
         &self.name
     }
 
+    /// Reemplaza el nombre de la conversación.
     pub fn set_name(&mut self, new_name: String) {
         self.name = new_name;
     }
 
+    /// Devuelve los mensajes de la conversación en orden de llegada.
     pub fn messages(&self) -> &[Message] {
         &self.messages
     }
 
+    /// Marca como leídos todos los mensajes entrantes.
     pub fn mark_as_read(&mut self) {
         for message in &mut self.messages {
             if message.direction() == &MessageDirection::Incoming {
@@ -45,14 +52,17 @@ impl Conversation {
         }
     }
 
+    /// Agrega un mensaje al final de la conversación.
     pub fn add_message(&mut self, message: Message) {
         self.messages.push(message);
     }
 
+    /// Devuelve la cantidad de mensajes de la conversación.
     pub fn message_count(&self) -> usize {
         self.messages.len()
     }
 
+    /// Cuenta los mensajes entrantes que todavía no han sido leídos.
     pub fn unread_count(&self) -> usize {
         self.messages
             .iter()

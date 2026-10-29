@@ -2,10 +2,12 @@ use crate::chat_app::ChatApp;
 use crate::models::conversation::Conversation;
 use crate::models::message::{Message, MessageStatus};
 
+/// Imprime en la salida estándar la lista de conversaciones.
 pub fn print_chats(chat: &ChatApp) {
     print!("{}", render_chats(chat));
 }
 
+/// Convierte un estado de mensaje en la etiqueta que se muestra al usuario.
 fn render_status(status: Option<&MessageStatus>) -> &'static str {
     match status {
         Some(MessageStatus::Sending) => "Estado: Enviando",
@@ -17,6 +19,7 @@ fn render_status(status: Option<&MessageStatus>) -> &'static str {
     }
 }
 
+/// Convierte un archivo adjunto en el texto que se muestra al usuario.
 fn render_attachment(attachment: Option<&str>) -> String {
     match attachment {
         Some(file) => format!("Archivo adjunto: {file}"),
@@ -24,6 +27,7 @@ fn render_attachment(attachment: Option<&str>) -> String {
     }
 }
 
+/// Renderiza los datos principales de un mensaje.
 pub fn render_message(message: &Message) -> String {
     format!(
         "De: {}\nMensaje: {}\n{}\n{}\n-------------------------\n",
@@ -34,6 +38,7 @@ pub fn render_message(message: &Message) -> String {
     )
 }
 
+/// Renderiza las estadísticas de una conversación.
 pub fn render_conversation_stats(conversation: &Conversation) -> String {
     format!(
         "{}\nTeléfono: {}\n-------------------------\nTotal de mensajes: {}\nMensajes no leidos: {}\n\n",
@@ -44,6 +49,7 @@ pub fn render_conversation_stats(conversation: &Conversation) -> String {
     )
 }
 
+/// Renderiza el resumen de todas las conversaciones y sus mensajes no leídos.
 pub fn render_chats(chat: &ChatApp) -> String {
     let mut output = format!(
         "\n=== {} Conversaciones ===\n\nNo leidos: {}\n\n",

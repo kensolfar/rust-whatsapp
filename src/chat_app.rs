@@ -3,6 +3,7 @@ use crate::models::message::{Message, MessageDirection, MessageStatus};
 
 const MY_PHONE_NUMBER: &str = "+50683032235";
 
+/// Indica si el contenido y el archivo adjunto están vacíos.
 fn is_empty_message(content: &str, attachment: Option<&str>) -> bool {
     content.trim().is_empty() && attachment.is_none_or(|a| a.trim().is_empty())
 }
@@ -15,6 +16,7 @@ pub enum ChatError {
 }
 
 impl std::fmt::Display for ChatError {
+    /// Escribe el mensaje legible asociado al error.
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let message = match self {
             Self::EmptyMessage => "El mensaje no puede estar vacío.",
@@ -33,20 +35,24 @@ pub struct ChatApp {
 }
 
 impl ChatApp {
+    /// Crea una aplicación de chat sin conversaciones.
     pub fn new() -> Self {
         Self {
             conversations: Vec::new(),
         }
     }
 
+    /// Devuelve todas las conversaciones almacenadas en el orden de creación.
     pub fn conversations(&self) -> &[Conversation] {
         &self.conversations
     }
 
+    /// Devuelve la cantidad de conversaciones almacenadas.
     pub fn conversation_count(&self) -> usize {
         self.conversations.len()
     }
 
+    /// Crea una conversación y le asigna el siguiente identificador disponible.
     fn create_conversation(&mut self, phone_number: String, name: String) {
         let id = self
             .conversations
@@ -59,6 +65,10 @@ impl ChatApp {
             .push(Conversation::new(id, phone_number, name));
     }
 
+    /// Agrega una conversación nueva.
+    ///
+    /// Devuelve [`ChatError::ConversationAlreadyExists`] si ya existe una
+    /// conversación con el mismo número telefónico.
     pub fn add_conversation(
         &mut self,
         phone_number: String,
@@ -75,6 +85,11 @@ impl ChatApp {
         Ok(())
     }
 
+    /// Agrega un mensaje entrante a la conversación indicada.
+    ///
+    /// Si la conversación no existe, la crea usando `sender` como nombre.
+    /// Devuelve [`ChatError::EmptyMessage`] cuando no hay contenido ni archivo
+    /// adjunto.
     pub fn add_incoming_message(
         &mut self,
         phone_number: &str,
@@ -114,26 +129,35 @@ impl ChatApp {
         Ok(())
     }
 
+    /// Devuelve la cantidad total de mensajes de todas las conversaciones.
     pub fn total_messages(&self) -> usize {
         self.conversations.iter().map(|c| c.message_count()).sum()
     }
 
+    /// Devuelve la cantidad total de mensajes entrantes no leídos.
     pub fn total_unread_messages(&self) -> usize {
         self.conversations.iter().map(|c| c.unread_count()).sum()
     }
 
+    /// Busca una conversación por número telefónico.
     pub fn find_conversation(&self, phone_number: &str) -> Option<&Conversation> {
         self.conversations
             .iter()
             .find(|c| c.phone_number() == phone_number)
     }
 
+    /// Busca una conversación mutable por número telefónico.
     pub fn find_conversation_mut(&mut self, phone_number: &str) -> Option<&mut Conversation> {
         self.conversations
             .iter_mut()
             .find(|c| c.phone_number() == phone_number)
     }
 
+    /// Agrega un mensaje saliente a una conversación existente.
+    ///
+    /// El mensaje se crea con estado [`MessageStatus::Sending`]. Devuelve
+    /// [`ChatError::EmptyMessage`] si no hay contenido ni archivo adjunto, o
+    /// [`ChatError::ConversationNotFound`] si no existe la conversación.
     pub fn send_message(
         &mut self,
         phone_number: &str,
@@ -161,6 +185,7 @@ impl ChatApp {
         Ok(())
     }
 
+    /// Marca como leídos todos los mensajes entrantes de una conversación.
     pub fn mark_conversation_as_read(&mut self, phone_number: &str) -> Result<(), ChatError> {
         let conversation = self
             .find_conversation_mut(phone_number)
@@ -173,6 +198,7 @@ impl ChatApp {
 }
 
 impl Default for ChatApp {
+    /// Crea una aplicación de chat sin conversaciones.
     fn default() -> Self {
         Self::new()
     }

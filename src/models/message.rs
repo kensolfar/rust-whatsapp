@@ -25,6 +25,10 @@ pub struct Message {
 }
 
 impl Message {
+    /// Crea un mensaje.
+    ///
+    /// Los mensajes entrantes siempre se crean sin estado de entrega. El
+    /// estado proporcionado solo se conserva para mensajes salientes.
     pub fn new(
         phone_number: String,
         sender: String,
@@ -49,44 +53,57 @@ impl Message {
             is_read,
         }
     }
+    /// Devuelve el remitente del mensaje.
     pub fn sender(&self) -> &str {
         &self.sender
     }
 
+    /// Devuelve el contenido textual del mensaje.
     pub fn content(&self) -> &str {
         &self.content
     }
 
+    /// Devuelve el número telefónico asociado al mensaje.
     pub fn phone_number(&self) -> &str {
         &self.phone_number
     }
 
+    /// Devuelve el estado de entrega del mensaje, si tiene uno.
     pub fn status(&self) -> Option<&MessageStatus> {
         self.status.as_ref()
     }
 
+    /// Devuelve la dirección del mensaje.
     pub fn direction(&self) -> &MessageDirection {
         &self.direction
     }
 
+    /// Devuelve el nombre del archivo adjunto, si existe.
     pub fn attachment(&self) -> Option<&str> {
         self.attachment.as_deref()
     }
 
+    /// Actualiza el estado de entrega de un mensaje saliente.
+    ///
+    /// Los mensajes entrantes no modifican su estado y permanecen sin estado
+    /// de entrega.
     pub fn update_status(&mut self, new_status: MessageStatus) {
         if self.direction != MessageDirection::Incoming {
             self.status = Some(new_status);
         }
     }
 
+    /// Indica si el mensaje tiene un archivo adjunto.
     pub fn has_attachment(&self) -> bool {
         self.attachment.is_some()
     }
 
+    /// Indica si el mensaje fue marcado como leído.
     pub fn is_read(&self) -> bool {
         self.is_read
     }
 
+    /// Marca el mensaje como leído.
     pub fn mark_as_read(&mut self) {
         self.is_read = true;
     }
