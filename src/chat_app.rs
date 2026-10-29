@@ -90,7 +90,7 @@ impl ChatApp {
         let conversation_index = self
             .conversations
             .iter()
-            .position(|conversation| conversation.phone_number() == String::from(phone_number));
+            .position(|conversation| conversation.phone_number() == phone_number);
 
         let conversation_index = match conversation_index {
             Some(index) => index,

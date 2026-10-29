@@ -52,7 +52,7 @@ impl Conversation {
     pub fn unread_count(&self) -> usize {
         self.messages
             .iter()
-            .filter(|m| m.is_read() == false && m.direction() == &MessageDirection::Incoming)
+            .filter(|m| !m.is_read() && m.direction() == &MessageDirection::Incoming)
             .count()
     }
 }
