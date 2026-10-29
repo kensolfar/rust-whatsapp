@@ -1,5 +1,11 @@
 use crate::models::conversation::Conversation;
-use crate::models::message::{Message, MessageStatus, MessageDirection};
+use crate::models::message::{Message, MessageDirection, MessageStatus};
+
+const MY_PHONE_NUMBER: &str = "+50683032235";
+
+fn is_empty_message(content: &str, attachment: Option<&str>) -> bool {
+    content.trim().is_empty() && attachment.is_none_or(|a| a.trim().is_empty())
+}
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ChatError {
@@ -53,7 +59,11 @@ impl ChatApp {
             .push(Conversation::new(id, phone_number, name));
     }
 
-    pub fn add_conversation(&mut self, phone_number: String, name: String) -> Result<(), ChatError> {
+    pub fn add_conversation(
+        &mut self,
+        phone_number: String,
+        name: String,
+    ) -> Result<(), ChatError> {
         let conversation_exists = self
             .conversations
             .iter()
@@ -65,21 +75,43 @@ impl ChatApp {
         Ok(())
     }
 
-    pub fn add_message(&mut self, message: Message) {
+    pub fn add_message(
+        &mut self,
+        phone_number: &str,
+        sender: &str,
+        content: &str,
+        attachment: Option<&str>,
+    ) -> Result<(), ChatError> {
+
+        if is_empty_message(content, attachment) {
+            return Err(ChatError::EmptyMessage);
+        }
+        
         let conversation_index = self
             .conversations
             .iter()
-            .position(|conversation| conversation.phone_number() == message.phone_number());
+            .position(|conversation| conversation.phone_number() == String::from(phone_number));
 
         let conversation_index = match conversation_index {
             Some(index) => index,
             None => {
-                let _ = self.add_conversation(message.phone_number().into(), message.sender().into());
+                let _ =
+                    self.add_conversation(String::from(phone_number).to_owned(), String::from(sender));
                 self.conversations.len() - 1
             }
         };
 
-        self.conversations[conversation_index].add_message(message);
+        self.conversations[conversation_index].add_message(Message::new(
+            String::from(MY_PHONE_NUMBER),
+            String::from("Yo"),
+            String::from(content),
+            MessageStatus::Sending,
+            MessageDirection::Incoming,
+            attachment.map(String::from),
+            false,
+        ));
+
+        Ok(())
     }
 
     pub fn total_messages(&self) -> usize {
@@ -108,7 +140,7 @@ impl ChatApp {
         content: &str,
         attachment: Option<&str>,
     ) -> Result<(), ChatError> {
-        if content.trim().is_empty() && attachment.is_none_or(|a| a.trim().is_empty()) {
+        if is_empty_message(content, attachment) {
             return Err(ChatError::EmptyMessage);
         }
 
@@ -117,14 +149,28 @@ impl ChatApp {
             .ok_or(ChatError::ConversationNotFound)?;
 
         conversation.add_message(Message::new(
-            String::from(phone_number),
+            String::from(MY_PHONE_NUMBER),
             String::from("Yo"),
             String::from(content),
             MessageStatus::Sending,
-            MessageDirection::Outgoing, 
+            MessageDirection::Outgoing,
             attachment.map(String::from),
             false,
         ));
+
+        Ok(())
+    }
+
+    pub fn mark_conversation_as_read(&mut self, phone_number: &str) -> Result<(), ChatError> {
+        let conversation = self
+            .find_conversation_mut(phone_number)
+            .ok_or(ChatError::ConversationNotFound)?;
+
+        for message in conversation.messages_mut() {
+            if message.direction() == &MessageDirection::Incoming {
+                message.mark_as_read();
+            }
+        }
 
         Ok(())
     }
@@ -162,10 +208,7 @@ mod tests {
             .add_conversation(String::from("+50683032235"), String::from("Juan"))
             .unwrap();
 
-        let result = chat_app.add_conversation(
-            String::from("+50683032235"),
-            String::from("Pedro"),
-        );
+        let result = chat_app.add_conversation(String::from("+50683032235"), String::from("Pedro"));
 
         assert_eq!(result, Err(ChatError::ConversationAlreadyExists));
         assert_eq!(chat_app.conversation_count(), 1);
@@ -211,5 +254,48 @@ mod tests {
         conversation.unwrap().set_name(String::from("Pedro"));
         let updated_conversation = chat_app.find_conversation("+50683032235");
         assert_eq!(updated_conversation.unwrap().name(), "Pedro");
+    }
+    
+    #[test]
+    fn send_message_should_add_outgoing_message_to_conversation() {
+        let mut chat_app = ChatApp::new();
+        chat_app
+            .add_conversation(String::from("+50683032235"), String::from("Juan"))
+            .unwrap();
+        chat_app
+            .send_message("+50683032235", "Hola", None)
+            .unwrap();
+        let conversation = chat_app.find_conversation("+50683032235").unwrap();
+        assert_eq!(conversation.message_count(), 1);
+        assert_eq!(conversation.messages()[0].content(), "Hola");
+        assert_eq!(conversation.messages()[0].direction(), &MessageDirection::Outgoing);
+    }
+
+    #[test]
+    fn mark_conversation_as_read_should_mark_all_incoming_messages_as_read() {
+        const PHONE_NUMBER: &str = "+50688888888";
+        let mut chat_app = ChatApp::new();
+        chat_app
+            .add_conversation(String::from(PHONE_NUMBER), String::from("Juan"))
+            .unwrap();
+        chat_app.add_message(
+            PHONE_NUMBER,
+            "Juan",
+            "Hola",
+            None,
+        ).unwrap();
+        chat_app.send_message(PHONE_NUMBER, "Hola", None).unwrap();
+        chat_app.add_message(
+            PHONE_NUMBER,
+            "Juan",
+            "¿Cómo estás?",
+            None,
+        ).unwrap();
+        chat_app.send_message(PHONE_NUMBER, "Muy bien, gracias.", None).unwrap();
+        chat_app
+            .mark_conversation_as_read(PHONE_NUMBER)
+            .unwrap();
+        let conversation = chat_app.find_conversation(PHONE_NUMBER).unwrap();
+        assert_eq!(conversation.unread_count(), 0);
     }
 }

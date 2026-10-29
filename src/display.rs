@@ -1,6 +1,6 @@
 use crate::chat_app::ChatApp;
 use crate::models::conversation::Conversation;
-use crate::models::message::{Message, MessageStatus, MessageDirection};
+use crate::models::message::{Message, MessageStatus};
 
 pub fn print_chats(chat: &ChatApp) {
     print!("{}", render_chats(chat));
@@ -60,6 +60,7 @@ pub fn render_chats(chat: &ChatApp) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::models::message::MessageDirection;
 
     fn message(status: MessageStatus, attachment: Option<&str>) -> Message {
         Message::new(
@@ -111,13 +112,17 @@ mod tests {
     #[test]
     fn render_chats_should_include_conversation_statistics() {
         let mut chat = ChatApp::new();
-        chat.add_message(message(MessageStatus::Read, None));
+        chat.add_message(
+            "PHONE_NUMBER",
+            "Juan",
+            "¿Cómo estás?",
+            None,).unwrap();
 
         let rendered = render_chats(&chat);
 
         assert!(rendered.contains("=== 1 Conversaciones ==="));
-        assert!(rendered.contains("No leidos: 0"));
+        assert!(rendered.contains("No leidos: 1"));
         assert!(rendered.contains("Total de mensajes: 1"));
-        assert!(rendered.contains("Mensajes no leidos: 0"));
+        assert!(rendered.contains("Mensajes no leidos: 1"));
     }
 }

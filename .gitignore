@@ -1,2 +1,6 @@
 /target
 rust-whatsapp-revision.zip
+/.cargo
+/.rustup
+/.agents
+/.aws
