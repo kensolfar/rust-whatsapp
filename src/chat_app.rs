@@ -105,7 +105,7 @@ impl ChatApp {
             String::from(phone_number),
             String::from(sender),
             String::from(content),
-            MessageStatus::Sending,
+            None,
             MessageDirection::Incoming,
             attachment.map(String::from),
             false,
@@ -152,10 +152,10 @@ impl ChatApp {
             String::from(MY_PHONE_NUMBER),
             String::from("Yo"),
             String::from(content),
-            MessageStatus::Sending,
+            Some(MessageStatus::Sending),
             MessageDirection::Outgoing,
             attachment.map(String::from),
-            false,
+            true,
         ));
 
         Ok(())
@@ -291,6 +291,8 @@ mod tests {
             .unwrap();
 
         assert_eq!(chat_app.total_unread_messages(), 1);
+        let conversation = chat_app.find_conversation("+50683032235").unwrap();
+        assert_eq!(conversation.messages()[0].status(), None);
     }
 
     #[test]

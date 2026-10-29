@@ -75,7 +75,7 @@ mod tests {
             String::from("+50683032235"),
             String::from("Juan"),
             String::from(content),
-            MessageStatus::Sending,
+            Some(MessageStatus::Sending),
             direction,
             None,
             is_read,

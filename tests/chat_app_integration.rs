@@ -11,7 +11,7 @@ fn sending_valid_message_to_existing_conversation_should_succeed() {
     assert!(result.is_ok());
     let conversation = chat_app.find_conversation("+50683032235").unwrap();
     assert_eq!(conversation.message_count(), 1);
-    assert_eq!(conversation.messages()[0].status(), &MessageStatus::Sending);
+    assert_eq!(conversation.messages()[0].status(), Some(&MessageStatus::Sending));
 }
 
 #[test]

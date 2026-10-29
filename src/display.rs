@@ -6,13 +6,14 @@ pub fn print_chats(chat: &ChatApp) {
     print!("{}", render_chats(chat));
 }
 
-fn render_status(status: &MessageStatus) -> &'static str {
+fn render_status(status: Option<&MessageStatus>) -> &'static str {
     match status {
-        MessageStatus::Sending => "Estado: Enviando",
-        MessageStatus::Sent => "Estado: Enviado",
-        MessageStatus::Delivered => "Estado: Entregado",
-        MessageStatus::Read => "Estado: Leído",
-        MessageStatus::Failed => "Estado: Fallido",
+        Some(MessageStatus::Sending) => "Estado: Enviando",
+        Some(MessageStatus::Sent) => "Estado: Enviado",
+        Some(MessageStatus::Delivered) => "Estado: Entregado",
+        Some(MessageStatus::Read) => "Estado: Leído",
+        Some(MessageStatus::Failed) => "Estado: Fallido",
+        None => "Mensaje Entrante"
     }
 }
 
@@ -62,7 +63,7 @@ mod tests {
     use super::*;
     use crate::models::message::MessageDirection;
 
-    fn message(status: MessageStatus, attachment: Option<&str>) -> Message {
+    fn message(status: Option<MessageStatus>, attachment: Option<&str>) -> Message {
         Message::new(
             String::from("+50683032235"),
             String::from("Juan"),
@@ -76,14 +77,19 @@ mod tests {
 
     #[test]
     fn render_status_should_return_the_expected_label() {
-        assert_eq!(render_status(&MessageStatus::Sending), "Estado: Enviando");
-        assert_eq!(render_status(&MessageStatus::Sent), "Estado: Enviado");
+        assert_eq!(render_status(Some(&MessageStatus::Sending)), "Estado: Enviando");
+        assert_eq!(render_status(Some(&MessageStatus::Sent)), "Estado: Enviado");
         assert_eq!(
-            render_status(&MessageStatus::Delivered),
+            render_status(Some(&MessageStatus::Delivered)),
             "Estado: Entregado"
         );
-        assert_eq!(render_status(&MessageStatus::Read), "Estado: Leído");
-        assert_eq!(render_status(&MessageStatus::Failed), "Estado: Fallido");
+        assert_eq!(render_status(Some(&MessageStatus::Read)), "Estado: Leído");
+        assert_eq!(render_status(Some(&MessageStatus::Failed)), "Estado: Fallido");
+    }
+
+    #[test]
+    fn render_status_should_label_messages_without_status_as_incoming() {
+        assert_eq!(render_status(None), "Mensaje Entrante");
     }
 
     #[test]
@@ -101,7 +107,7 @@ mod tests {
 
     #[test]
     fn render_message_should_include_message_details() {
-        let rendered = render_message(&message(MessageStatus::Sent, Some("imagen.jpg")));
+        let rendered = render_message(&message(Some(MessageStatus::Sent), Some("imagen.jpg")));
 
         assert!(rendered.contains("De: Juan"));
         assert!(rendered.contains("Mensaje: Hola"));

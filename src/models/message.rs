@@ -18,7 +18,7 @@ pub struct Message {
     phone_number: String,
     sender: String,
     content: String,
-    status: MessageStatus,
+    status: Option<MessageStatus>,
     direction: MessageDirection,
     attachment: Option<String>,
     is_read: bool,
@@ -29,7 +29,7 @@ impl Message {
         phone_number: String,
         sender: String,
         content: String,
-        status: MessageStatus,
+        status: Option<MessageStatus>,
         direction: MessageDirection,
         attachment: Option<String>,
         is_read: bool,
@@ -56,8 +56,8 @@ impl Message {
         &self.phone_number
     }
 
-    pub fn status(&self) -> &MessageStatus {
-        &self.status
+    pub fn status(&self) -> Option<&MessageStatus> {
+        self.status.as_ref()
     }
 
     pub fn direction(&self) -> &MessageDirection {
@@ -68,7 +68,7 @@ impl Message {
         self.attachment.as_deref()
     }
 
-    pub fn update_status(&mut self, new_status: MessageStatus) {
+    pub fn update_status(&mut self, new_status: Option<MessageStatus>) {
         if self.direction != MessageDirection::Incoming {
             self.status = new_status;
         }
@@ -97,7 +97,7 @@ mod tests {
             String::from("+50683032235"),
             String::from("Juan"),
             String::from("Hola, ¿cómo estás?"),
-            MessageStatus::Sending,
+            Some(MessageStatus::Sending),
             MessageDirection::Incoming,
             attachment.map(String::from),
             false,
@@ -121,7 +121,22 @@ mod tests {
     fn new_message_should_have_correct_status() {
         let message = message(None);
 
-        assert_eq!(message.status, MessageStatus::Sending);
+        assert_eq!(message.status, Some(MessageStatus::Sending));
+    }
+
+    #[test]
+    fn new_incoming_message_should_have_no_status() {
+        let message = Message::new(
+            String::from("+50683032235"),
+            String::from("Juan"),
+            String::from("Hola, ¿cómo estás?"),
+            None,
+            MessageDirection::Incoming,
+            None,
+            false,
+        );
+
+        assert_eq!(message.status(), None);
     }
 
     #[test]
@@ -130,12 +145,29 @@ mod tests {
             String::from("+50683032235"),
             String::from("Juan"),
             String::from("Hola, ¿cómo estás?"),
-            MessageStatus::Sending,
+            Some(MessageStatus::Sending),
             MessageDirection::Outgoing,
             None,
             false,
         );
-        message.update_status(MessageStatus::Sent);
-        assert_eq!(message.status, MessageStatus::Sent);
+        message.update_status(Some(MessageStatus::Sent));
+        assert_eq!(message.status, Some(MessageStatus::Sent));
+    }
+
+    #[test]
+    fn update_status_should_not_change_an_incoming_message_status() {
+        let mut message = Message::new(
+            String::from("+50683032235"),
+            String::from("Juan"),
+            String::from("Hola, ¿cómo estás?"),
+            None,
+            MessageDirection::Incoming,
+            None,
+            false,
+        );
+
+        message.update_status(Some(MessageStatus::Read));
+
+        assert_eq!(message.status(), None);
     }
 }
