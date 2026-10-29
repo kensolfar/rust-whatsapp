@@ -75,7 +75,7 @@ impl ChatApp {
         Ok(())
     }
 
-    pub fn add_message(
+    pub fn add_incoming_message(
         &mut self,
         phone_number: &str,
         sender: &str,
@@ -86,7 +86,7 @@ impl ChatApp {
         if is_empty_message(content, attachment) {
             return Err(ChatError::EmptyMessage);
         }
-        
+
         let conversation_index = self
             .conversations
             .iter()
@@ -272,20 +272,34 @@ mod tests {
     }
 
     #[test]
+    fn send_message_should_not_increase_unread_count() {
+        let mut chat_app = ChatApp::new();
+        chat_app
+            .add_conversation(String::from("+50683032235"), String::from("Juan"))
+            .unwrap();
+
+        chat_app
+            .send_message("+50683032235", "Hola", None)
+            .unwrap();
+
+        assert_eq!(chat_app.total_unread_messages(), 0);
+    }
+
+    #[test]
     fn mark_conversation_as_read_should_mark_all_incoming_messages_as_read() {
         const PHONE_NUMBER: &str = "+50688888888";
         let mut chat_app = ChatApp::new();
         chat_app
             .add_conversation(String::from(PHONE_NUMBER), String::from("Juan"))
             .unwrap();
-        chat_app.add_message(
+        chat_app.add_incoming_message(
             PHONE_NUMBER,
             "Juan",
             "Hola",
             None,
         ).unwrap();
         chat_app.send_message(PHONE_NUMBER, "Hola", None).unwrap();
-        chat_app.add_message(
+        chat_app.add_incoming_message(
             PHONE_NUMBER,
             "Juan",
             "¿Cómo estás?",

@@ -112,7 +112,7 @@ mod tests {
     #[test]
     fn render_chats_should_include_conversation_statistics() {
         let mut chat = ChatApp::new();
-        chat.add_message(
+        chat.add_incoming_message(
             "PHONE_NUMBER",
             "Juan",
             "¿Cómo estás?",
