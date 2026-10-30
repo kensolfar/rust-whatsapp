@@ -46,7 +46,7 @@ impl Conversation {
     /// Marca como leídos todos los mensajes entrantes.
     pub fn mark_as_read(&mut self) {
         for message in &mut self.messages {
-            if message.direction() == &MessageDirection::Incoming {
+            if message.direction() == MessageDirection::Incoming {
                 message.mark_as_read();
             }
         }
@@ -66,7 +66,7 @@ impl Conversation {
     pub fn unread_count(&self) -> usize {
         self.messages
             .iter()
-            .filter(|message| match &message.kind {
+            .filter(|message| match &message.kind() {
                 MessageKind::Incoming { is_read } => !is_read,
                 MessageKind::Outgoing { .. } => false,
             })

@@ -110,8 +110,7 @@ impl ChatApp {
         let conversation_index = match conversation_index {
             Some(index) => index,
             None => {
-                let _ =
-                    self.add_conversation(String::from(phone_number), String::from(sender));
+                self.create_conversation(String::from(phone_number), String::from(sender));
                 self.conversations.len() - 1
             }
         };
@@ -287,7 +286,7 @@ mod tests {
         let conversation = chat_app.find_conversation("+50683032235").unwrap();
         assert_eq!(conversation.message_count(), 1);
         assert_eq!(conversation.messages()[0].content(), "Hola");
-        assert_eq!(conversation.messages()[0].direction(), &MessageDirection::Outgoing);
+        assert_eq!(conversation.messages()[0].direction(), MessageDirection::Outgoing);
     }
 
     #[test]

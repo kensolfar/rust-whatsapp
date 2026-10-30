@@ -28,7 +28,7 @@ pub struct Message {
     phone_number: String,
     sender: String,
     content: String,
-    pub(crate) kind: MessageKind,
+    kind: MessageKind,
     attachment: Option<String>,
 }
 
@@ -91,11 +91,15 @@ impl Message {
     }
 
     /// Devuelve la dirección del mensaje.
-    pub fn direction(&self) -> &MessageDirection {
-        match &self.kind {
-            MessageKind::Incoming { .. } => &MessageDirection::Incoming,
-            MessageKind::Outgoing { .. } => &MessageDirection::Outgoing,
+    pub fn direction(&self) -> MessageDirection {
+        match self.kind {
+            MessageKind::Incoming { .. } => MessageDirection::Incoming,
+            MessageKind::Outgoing { .. } => MessageDirection::Outgoing,
         }
+    }
+
+    pub fn kind(&self) -> &MessageKind {
+        &self.kind
     }
 
     /// Devuelve el nombre del archivo adjunto, si existe.
@@ -170,7 +174,7 @@ mod tests {
     }
 
     #[test]
-    fn new_incoming_message_should_ignore_provided_status() {
+    fn new_incoming_message_should_have_no_delivery_status() {
         let message = Message::new_incoming(
             String::from("+50683032235"),
             String::from("Juan"),
